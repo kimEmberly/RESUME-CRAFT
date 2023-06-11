@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { createResume } from './api'; // import the createResume function from your API file
+import { useParams} from 'react-router-dom';
 
 function ResumeEditor() {
   const { id } = useParams(); // extract the resume id from the URL
@@ -16,6 +17,23 @@ function ResumeEditor() {
   const [experience, setExperience] = useState([]);
   const [projects, setProjects] = useState([]);
   const [skills, setSkills] = useState([]);
+//   const history = useHistory();
+  const [resumeData, setResumeData] = useState({
+    // ... initialize the resume data ...
+  });
+
+  function handleSave() {
+    createResume(resumeData)
+      .then(createdResume => {
+        // Redirect to the newly created resume page
+        // history.push(`/resumes/${createdResume.id}`);
+      })
+      .catch(error => {
+        console.error('Failed to create resume', error);
+        // Handle error appropriately, e.g. show an error message to the user
+      });
+  }
+
 
   const handleProfileChange = (event) => {
     const { name, value } = event.target;
