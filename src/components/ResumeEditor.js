@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createResume } from './api'; // import the createResume function from your API file
-import { useParams} from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 function ResumeEditor() {
   const { id } = useParams(); // extract the resume id from the URL
   const [profile, setProfile] = useState({
+    id: id,
     name: '',
     currentDesignation: '',
     location: '',
@@ -17,19 +18,42 @@ function ResumeEditor() {
   const [experience, setExperience] = useState([]);
   const [projects, setProjects] = useState([]);
   const [skills, setSkills] = useState([]);
-//   const history = useHistory();
-  const [resumeData, setResumeData] = useState({
-    // ... initialize the resume data ...
+  const history = useNavigate();
+
+  // initialize the resume data state using data from local storage
+  const [resumeData, setResumeData] = useState(() => {
+    const data = localStorage.getItem('resumeData');
+    return data ? JSON.parse(data) : {
+      profile: {},
+      academics: [],
+      experience: [],
+      projects: [],
+      skills: []
+    };
   });
 
+  useEffect(() => {
+    // update the state using data from local storage
+    const data = localStorage.getItem('resumeData');
+    if (data) {
+      const resumeInfo = JSON.parse(data);
+      setProfile(resumeInfo.profile || {});
+      setAboutMe(resumeInfo.aboutMe || '');
+      setAcademics(resumeInfo.academics || []);
+      setExperience(resumeInfo.experience || []);
+      setProjects(resumeInfo.projects || []);
+      setSkills(resumeInfo.skills || []);
+    }
+  }, []);
+
   function handleSave() {
+    localStorage.setItem('resumeData', JSON.stringify(resumeData));
     createResume(resumeData)
       .then(createdResume => {
-        // Redirect to the newly created resume page
-        // history.push(`/resumes/${createdResume.id}`);
+        history(`/resumes/${createdResume.id}`);
       })
       .catch(error => {
-        console.error('Failed to create resume', error);
+        console.error('Failed to create resume:', error);
         // Handle error appropriately, e.g. show an error message to the user
       });
   }
@@ -38,10 +62,12 @@ function ResumeEditor() {
   const handleProfileChange = (event) => {
     const { name, value } = event.target;
     setProfile((prevProfile) => ({ ...prevProfile, [name]: value }));
+    setResumeData(prevResumeData => ({ ...prevResumeData, profile: { ...prevResumeData.profile, id: id, [name]: value } }));
   };
 
   const handleAboutMeChange = (event) => {
     setAboutMe(event.target.value);
+    setResumeData(prevResumeData => ({ ...prevResumeData, aboutMe: event.target.value }));
   };
 
   const handleAcademicsChange = (event, index) => {
@@ -49,124 +75,138 @@ function ResumeEditor() {
     const newAcademics = [...academics];
     newAcademics[index] = { ...newAcademics[index], [name]: value };
     setAcademics(newAcademics);
+
+    const newAcademicsData = [...resumeData.academics];
+    newAcademicsData[index] = { ...newAcademicsData[index], [name]: value };
+    setResumeData(prevResumeData => ({ ...prevResumeData, academics: newAcademicsData }));
   };
 
   const handleAddAcademics = () => {
-    setAcademics([...academics, { title: '',     year: '', writeUp: '' }]);
+    setAcademics([...academics, { title: '', year: '', writeUp: '' }]);
+    setResumeData(prevResumeData => ({ ...prevResumeData, academics: [...prevResumeData.academics, { title: '', year: '', writeUp: '' }] }));
+  };
+
+  const handleDeleteAcademics = (index) => {
+    const newAcademics = [...academics];
+    newAcademics.splice(index, 1);
+    setAcademics(newAcademics);
+
+    const newAcademicsData = [...resumeData.academics];
+    newAcademicsData.splice(index, 1);
+    setResumeData(prevResumeData => ({ ...prevResumeData, academics: newAcademicsData }));
+  };
+
+  const handleExperienceChange = (event, index) => {
+    const { name, value } = event.target;
+    const newExperience = [...experience];
+    newExperience[index] = { ...newExperience[index], [name]: value };
+    setExperience(newExperience);
+
+    const newExperienceData = [...resumeData.experience];
+    newExperienceData[index] = { ...newExperienceData[index], [name]: value };
+    setResumeData(prevResumeData => ({ ...prevResumeData, experience: newExperienceData }));
+  };
+
+  const handleAddExperience = () => {
+    setExperience([...experience, {
+      designation: '', organization: '', tenure: '', location: '', writeUp: ''
+    }]);
+    setResumeData(prevResumeData => ({ ...prevResumeData, experience: [...prevResumeData.experience, {
+      designation: '', organization: '', tenure: '', location: '', writeUp: ''
+    }] }));
+  };
+
+  const handleDeleteExperience = (index) => {
+    const newExperience = [...experience];
+    newExperience.splice(index, 1);
+    setExperience(newExperience);
+
+    const newExperienceData = [...resumeData.experience];
+    newExperienceData.splice(index, 1);
+    setResumeData(prevResumeData => ({ ...prevResumeData, experience: newExperienceData }));
+  };
+
+  const handleProjectsChange = (event, index) => {
+    const {
+name, value } = event.target; const newProjects = [...projects]; newProjects[index] = { ...newProjects[index], [name]: value }; setProjects(newProjects);
+
+
+const newProjectsData = [...resumeData.projects];
+newProjectsData[index] = { ...newProjectsData[index], [name]: value };
+setResumeData(prevResumeData => ({ ...prevResumeData, projects: newProjectsData }));
+};
+const handleAddProjects = () => { setProjects([...projects, { title: '', link: '', writeUp: '' }]); setResumeData(prevResumeData => ({ ...prevResumeData, projects: [...prevResumeData.projects, { title: '', link: '', writeUp: '' }] })); };
+
+const handleDeleteProjects = (index) => { const newProjects = [...projects]; newProjects.splice(index, 1); setProjects(newProjects);
+
+  const newProjectsData = [...resumeData.projects];
+  newProjectsData.splice(index, 1);
+  setResumeData(prevResumeData => ({ ...prevResumeData, projects: newProjectsData }));
+  };
+
+    
+    // const newProjectsData = [...resumeData.projects];
+    // newProjectsData.splice(index, 1);
+    // setResumeData(prevResumeData => ({ ...prevResumeData, projects: newProjectsData }));
+    // };
+    
+   const handleSkillsChange = (event, index) => { const { value } = event.target; const newSkills = [...skills]; newSkills[index] = value; setSkills(newSkills);
+
+
+
+const newSkillsData = [...resumeData.skills];
+newSkillsData[index] = value;
+setResumeData(prevResumeData => ({ ...prevResumeData, skills: newSkillsData }));
 };
 
-const handleDeleteAcademics = (index) => {
-  const newAcademics = [...academics];
-  newAcademics.splice(index, 1);
-  setAcademics(newAcademics);
-};
+const handleAddSkills = () => { setSkills([...skills, '']); setResumeData(prevResumeData => ({ ...prevResumeData, skills: [...prevResumeData.skills, ''] })); };
 
-const handleExperienceChange = (event, index) => {
-  const { name, value } = event.target;
-  const newExperience = [...experience];
-  newExperience[index] = { ...newExperience[index], [name]: value };
-  setExperience(newExperience);
-};
+const handleDeleteSkills = (index) => { const newSkills = [...skills]; newSkills.splice(index, 1); setSkills(newSkills);
 
-const handleAddExperience = () => {
-  setExperience([...experience, {
-    designation: '', organization: '', tenure: '', location: '', writeUp: ''
-  }]);
-};
 
-const handleDeleteExperience = (index) => {
-  const newExperience = [...experience];
-  newExperience.splice(index, 1);
-  setExperience(newExperience);
-};
 
-const handleProjectsChange = (event, index) => {
-  const { name, value } = event.target;
-  const newProjects = [...projects];
-  newProjects[index] = { ...newProjects[index], [name]: value };
-  setProjects(newProjects);
+const newSkillsData = [...resumeData.skills];
+newSkillsData.splice(index, 1);
+setResumeData(prevResumeData => ({ ...prevResumeData, skills: newSkillsData }));
 };
+    return ( <div>
+      <h2>Edit {id}</h2> <form> <label htmlFor="name">Name</label> <input type="text" name="name" id="name" value={profile.name} onChange={handleProfileChange} />
+    
 
-const handleAddProjects = () => {
-  setProjects([...projects, { title: '', tenure: '', url: '', description: '' }]);
-};
-
-const handleDeleteProjects = (index) => {
-  const newProjects = [...projects];
-  newProjects.splice(index, 1);
-  setProjects(newProjects);
-};
-
-const handleSkillsChange = (event, index) => {
-  const { name, value } = event.target;
-  const newSkills = [...skills];
-  newSkills[index] = { ...newSkills[index], [name]: value };
-  setSkills(newSkills);
-};
-
-const handleAddSkills = () => {
-  setSkills([...skills, { name: '', rating: 0 }]);
-};
-
-const handleDeleteSkills = (index) => {
-  const newSkills = [...skills];
-  newSkills.splice(index, 1);
-  setSkills(newSkills);
-};
-
-const handleSubmit = () => {
-  // TODO: submit the form data to the backend API
-};
-
-return (
-  <div>
-    <h2>Edit {id}</h2>
-    <form onSubmit={handleSubmit}>
-      <h3>Profile</h3>
-      <div>
-        <label>Name:</label>
-        <input type="text" name="name" value={profile.name} onChange={handleProfileChange} />
-      </div>
-      <div>
-        <label>Current Designation:</label>
-        <input type="text" name="currentDesignation" value={profile.currentDesignation} onChange={handleProfileChange} />
-      </div>
-      <div>
-        <label>Location:</label>
-        <input type="text" name="location" value={profile.location} onChange={handleProfileChange} />
-      </div>
-      <div>
-        <label>E-mail ID:</label>
-        <input type="email" name="email" value={profile.email} onChange={handleProfileChange} />
-      </div>
-      <div>
-        <label>Phone No.:</label>
-        <input type="tel" name="phone" value={profile.phone} onChange={handleProfileChange} />
-      </div>
-      <div>
-        <label>Website (Optional):</label>
-        <input type="url" name="website" value={profile.website} onChange={handleProfileChange} />
-      </div>
-      <h3>About Me</h3>
-      <div>
-        <textarea value={aboutMe} onChange={handleAboutMeChange} />
-      </div>
-      <h3>Academics</h3>
-      {academics.map((academic, index) => (
-        <div key={index}>
-          <label>Title:</label>
-          <input type="text" name="title" value={academic.title} onChange={(event) => handleAcademicsChange(event, index)} />
-          <label>Year:</label>
-          <input type="text" name="year" value={academic.year} onChange={(event) => handleAcademicsChange(event, index)} />
-          <label>Write-up:</label>
-          <input type="text" name="writeUp" value={academic.writeUp} onChange={(event) => handleAcademicsChange(event, index)} />
-          <button type="button" onClick={() => handleDeleteAcademics(index)}>Delete</button>
-        </div>
-      ))}
-      <button type="button" onClick={handleAddAcademics}>Add Academic</button>
-      <h3>Professional Experience</h3>
-      {experience.map((exp, index) => (
+    
+        <label htmlFor="currentDesignation">Current Designation</label>
+        <input type="text" name="currentDesignation" id="currentDesignation" value={profile.currentDesignation} onChange={handleProfileChange} />
+    
+        <label htmlFor="location">Location</label>
+        <input type="text" name="location" id="location" value={profile.location} onChange={handleProfileChange} />
+    
+        <label htmlFor="email">Email</label>
+        <input type="email" name="email" id="email" value={profile.email} onChange={handleProfileChange} />
+    
+        <label htmlFor="phone">Phone</label>
+        <input type="tel" name="phone" id="phone" value={profile.phone} onChange={handleProfileChange} />
+    
+        <label htmlFor="website">Website</label>
+        <input type="url" name="website" id="website" value={profile.website} onChange={handleProfileChange} />
+    
+        <label htmlFor="aboutMe">About Me</label>
+        <textarea name="aboutMe" id="aboutMe" value={aboutMe} onChange={handleAboutMeChange}></textarea>
+    
+        <label htmlFor="academics">Academics</label>
+        {academics.map((academics, index) => (
           <div key={index}>
+            <input type="text" name="title" placeholder="Title" value={academics.title} onChange={event => handleAcademicsChange(event, index)} />
+            <input type="text" name="year" placeholder="Year" value={academics.year} onChange={event => handleAcademicsChange(event, index)} />
+            <textarea name="writeUp" placeholder="Write up" value={academics.writeUp} onChange={event => handleAcademicsChange(event, index)}></textarea>
+            <button type="button" onClick={() => handleDeleteAcademics(index)}>Delete</button>
+          </div>
+        ))}
+
+
+      <button type="button" onClick={handleAddAcademics}>Add Academic</button>
+      <label htmlFor="experience">Experience</label>
+    {experience.map((exp, index) => (
+      <div key={index}>
             <label>Designation:</label>
             <input type="text" name="designation" value={exp.designation} onChange={(event) => handleExperienceChange(event, index)} />
             <label>Organization:</label>
@@ -208,7 +248,7 @@ return (
           </div>
         ))}
         <button type="button" onClick={handleAddSkills}>Add Skill</button>
-        <button type="submit">Save</button>
+        <button type="submit" onClick={handleSave}>Save</button>
       </form>
     </div>
   );
