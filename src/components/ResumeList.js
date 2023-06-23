@@ -24,17 +24,13 @@ function ResumeList() {
     <div>
       <h2>My Resumes</h2>
       <ul>
-        {/* {resumes.map((resume, index) => (
-          <li key={index}>
-            <Link to={`/resumes/${resume}`}>{resume}</Link>
+      {resumes.map((resume) => (
+          <li key={resume.profile.id}>
+            <Link to={`/detail/${resume.profile.id}`}>{resume.profile.name}</Link>
             <button onClick={() => handleDelete(resume)}>Delete</button>
           </li>
-        ))} */}
-
-          <li key={1}>
-            <Link to={`/editor/${resumes.profile?.id}`}>{resumes.profile?.name}</Link>
-            <button onClick={() => handleDelete(resumes)}>Delete</button>
-          </li>
+        ))}
+     
 
       </ul>
     </div>

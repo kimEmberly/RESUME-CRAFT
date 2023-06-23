@@ -6,20 +6,22 @@ import { Link } from 'react-router-dom';
 function ResumeDetails() {
   const { id } = useParams(); // extract the resume id from the URL
   const [resumeData, setResumeData] = useState(null);
-  let address = '/editor/'+ id;
+  let address = '/editor/'+ resumeData?.profile?.id;
   useEffect(() => {
     const data = JSON.parse(localStorage.getItem('resumeData'));
     // MVP
-    setResumeData(data);
+    // setResumeData(data);
 
     // TODO: improvement on MVP success
-    // const resume = data?.filter((resume) => resume.id === id);
-    // setResumeData(resume[0]);
+    data.forEach((data) => {
+    if ( data.profile.id === id);
+    setResumeData(data);
+    });
   }, [id]);
 
   return (
     <div>
-      <h2>{id}</h2>
+      <h2>My Resume</h2>
       <Link to={address}><button>Edit</button></Link>
       <p>Profile</p>
       <ul>

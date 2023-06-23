@@ -28,12 +28,6 @@ function App() {
               <li>
                 <Link to="/resumes">Resumes</Link>
               </li>
-              <li>
-                <Link to="/editor">Editor</Link>
-              </li>
-              <li>
-                <Link to="/details">Details</Link>
-              </li>
             </ul>
           </nav>
           <Routes>
